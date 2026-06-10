@@ -1,11 +1,14 @@
 # Soko Safi AI ❄️🌱
 ### Decentralized Cold Storage & Circular Waste-to-Credit Ecosystem for African Markets
-**Live Platform Demo:** `https://your-render-app-url.onrender.com/main` *(Link your live Twilio/Render webhook endpoint here)*
+
+📱 **Live Platform MVP Demo Link:** `https://soko-safi-bot.onrender.com/main`
+📊 **Investor Pitch Slides:** [Click here to view our presentation slides](./soko_safi_presentation.html)
+📄 **Technical Pilot Appendix (PDF):** [View Field Validation Data](./SokoSafi_Pilot_Appendix-v2.pdf)
 
 ---
 
 ## 📌 Project Overview
-Soko Safi AI tackles the severe post-harvest loss crisis across open-air markets like **Ahero and Kibuye in Kisumu County, Kenya**. Traditional agricultural markets generate approximately **1,000 kg of organic waste daily** due to ambient thermal elements that accelerate rotting. 
+Soko Safi AI tackles the severe post-harvest loss crisis across open-air markets like **Ahero and Kibuye in Kisumu County, Kenya**. Traditional agricultural markets generate approximately **1,000 kg of organic waste daily** due to ambient heat elements that accelerate rotting. 
 
 Soko Safi AI addresses this through a multi-tiered structural model:
 1. **Solar-Powered Cooling Hubs:** Cold chain refrigeration hubs locked precisely at **10°C–12°C** to delay respiration and eliminate soft rot without causing chilling damage to crops like tomatoes.
@@ -14,8 +17,19 @@ Soko Safi AI addresses this through a multi-tiered structural model:
 
 ---
 
+## 📱 How to Test the Live WhatsApp MVP Sandbox Right Now
+Judges and mentors can interact directly with our live automated production system via the Twilio WhatsApp Sandbox by following these steps:
+
+1. Click this direct link to open WhatsApp: [Message Soko Safi AI on WhatsApp](https://wa.me/14155238886?text=join%20science-making)
+   * *Alternatively:* Save the number **`+1 415 523 8886`** on your phone contacts and open a new chat.
+2. Send the exact activation code message: **`join science-making`**
+3. Once you receive the confirmation greeting, type **`Hi`** or **`Menu`** to execute the multi-lingual registration routing.
+4. Select Option **`2`** to engage the programmatic **Waste-to-Credit Calculator** (`30 KG = 1 Free Crate Day`).
+
+---
+
 ## 📊 Proven Field Traction (7-Day Ahero Pilot Loop)
-We deployed an on-site mechanical prototype inside Ahero Market to test operational hypotheses with local perishable crop handlers:
+We deployed an on-site refrigeration prototype inside Ahero Market to test operational hypotheses with local perishable crop handlers:
 * **Storage Temperature:** Locked cleanly at 10°C–12°C.
 * **Preservation Metric:** **100% preservation achieved** over 7 days across tomato stocks.
 * **Pricing Validation:** Validated customer validation threshold at **KES 20 / crate / day**.
@@ -26,17 +40,16 @@ We deployed an on-site mechanical prototype inside Ahero Market to test operatio
 ---
 
 ## 🛠️ Tech Stack & Architecture
-* **Backend Framework:** Python / Flask
-* **Telephony Gateway:** Twilio API (WhatsApp Business Gateway Wrapper)
-* **Demographic Database Layer:** Automated Session State Engine tracking Language, Name, and Gender.
+* **Backend Server Framework:** Python / Flask (Deployed live on Render)
+* **Telephony Gateway API:** Twilio API (WhatsApp Business Gateway Wrapper)
+* **Demographic Database Layer:** Automated Session State Engine tracking Language, Name, and Gender natively.
 * **Circular Calculator Module:** Automated fractional token algorithm (`Credits = Weight / 30.0`).
 
 ---
 
 ## 📂 Repository Structure
 ```text
-├── app/
-│   ├── main.py          # Core Flask server managing onboarding & calculator endpoints
-│   └── SokoSafi_Pilot_Appendix-v2.pdf  # Technical verification data sheet
-├── requirements.txt     # Python production packages
-└── README.md            # Document overview & investor metrics
+├── main.py                         # Core Flask production server (Webhook entrypoint)
+├── SokoSafi_Pilot_Appendix-v2.pdf  # Technical field validation data sheet with photos
+├── soko_safi_presentation.html     # High-end interactive investor pitch presentation
+└── README.md                       # Main investor landing page & usage credentials
