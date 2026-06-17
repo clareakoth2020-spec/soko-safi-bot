@@ -2,7 +2,7 @@
 ### Decentralized Cold Storage & Circular Waste-to-Credit Ecosystem for African Markets
 
 📱 **Live Platform MVP Demo Link:** `https://soko-safi-bot.onrender.com/main`
-📊 **Investor Pitch Slides:** [Click here to view our presentation slides](./soko_safi_presentation.html)
+📊 **Investor Pitch Slides:** [[Click here to view our presentation slides](./soko_safi_presentation.html](https://docs.google.com/presentation/d/e/2PACX-1vRbj2dBzKJef-RjvIi6JI1-zIBUKf_-cG0rKXZQNtr7SyBaEbV5JzT1Mwrm7YHbNpjPqBbMGOgTgtqj/pub?start=true&loop=true&delayms=3000))
 📄 **Technical Pilot Appendix (PDF):** [View Field Validation Data](./SokoSafi_Pilot_Appendix-v2.pdf)
 
 ---
