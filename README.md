@@ -3,9 +3,7 @@
 
 📱 **Live Platform MVP Demo Link:** `(https://wa.me/14155238886?text=join%20science-making)`
 📊 **Investor Pitch Slides:** [[[Click here to view our presentation slides]]([url](https://docs.google.com/presentation/d/1-OyKotujsVy2RKGbwl-7GD_97bSUaUlt5kUgopaQdhI/edit?usp=sharing))]
-📄 **Technical Pilot Appendix (PDF):** [View Field Validation Data](./SokoSafi_Pilot_Appendix-v2.pdf)
-
----
+📄 **Technical Pilot Appendix (PDF):** [[View Field Validation Data]]([url](https://drive.google.com/file/d/1ooCY-eLDMMkICLyMPtOG4PUSmujDd4ve/view?usp=sharing)
 
 ## 📌 Project Overview
 Soko Safi AI tackles the severe post-harvest loss crisis across open-air markets like **Ahero and Kibuye in Kisumu County, Kenya**. Traditional agricultural markets generate approximately **1,000 kg of organic waste daily** due to ambient heat elements that accelerate rotting. 
