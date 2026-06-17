@@ -40,6 +40,9 @@ def generate_secure_tag():
 
 @app.route("/main", methods=["POST"])
 def whatsapp_reply():
+    # FIXED: Declared at the very top before any logical checks or operations occur
+    global AVAILABLE_STORAGE_SLOTS 
+    
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From")
     resp = MessagingResponse()
@@ -286,8 +289,7 @@ def whatsapp_reply():
             
             if "Storage" in payment_type:
                 crates = session.get("booked_crates", 0)
-                # Deduct slots globally in real-time
-                global AVAILABLE_STORAGE_SLOTS
+                # FIXED: The global variable is updated cleanly here without duplicate declaration
                 AVAILABLE_STORAGE_SLOTS = max(0, AVAILABLE_STORAGE_SLOTS - crates)
                 
                 receipt_text = (
@@ -302,7 +304,7 @@ def whatsapp_reply():
                     f"• Huduma: {payment_type}\n"
                     f"• Nafasi Yako: *Makreti {crates} Yamehifadhiwa*\n"
                     f"• Nambari ya Siri (Tag): `{secure_tag}`\n\n"
-                    f"Onyesha nambari hii ya siri kwa msimamizi wetu katika kituo cha hifadhi cha Ahero/Kibuye wakati wa kuleta mazao yako.\n\n"
+                    f"Onyesha nambari hii ya siri kwa msimamizi wetu katika kituo cha hifadhi cha Ahero/Kibuye wakati vya kuleta mazao yako.\n\n"
                     f"🤝 Asante sana kwa kuchagua Soko Safi AI! Karibu tena kufanya biashara safi sokoni."
                 )
             else:
