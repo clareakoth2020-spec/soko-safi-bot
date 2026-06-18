@@ -383,5 +383,8 @@ def whatsapp_reply():
     msg.body(menu_en if lang == "en" else menu_sw)
     return str(resp)
 
+@app.route("/ping", methods=["GET"])
+def keep_alive():
+    return "Soko Safi Engine Active", 200
 if __name__ == "__main__":
     app.run()
