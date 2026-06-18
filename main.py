@@ -5,42 +5,33 @@ import string
 
 app = Flask(__name__)
 
-# Mock Databases for the Demo Environment
-# persistent_users logs registered profiles permanently so they bypass onboarding
-persistent_users = {
-    # Example test entry:
-    # "+254719227699": {"name": "Clare", "gender": "Female", "lang": "en", "wallet_credits": 2.5}
-}
+# --- GLOBAL VARIABLES & VARIABLES FOR THE DEMO ---
+# Memory database to remember registered users by phone number
+persistent_users = {}
 
-# Live dynamic operational states
 user_sessions = {}
-AVAILABLE_STORAGE_SLOTS = 120  # Total physical crate capacity of the cold hub
-PRICE_PER_CRATE = 20           # KES per crate per day
-PRICE_PER_FERTILIZER = 50      # KES per bottle/bag
+AVAILABLE_STORAGE_SLOTS = 120  # Remaining crates in the cold hub
+PRICE_PER_CRATE = 20           # KES per crate each day
+PRICE_PER_FERTILIZER = 50      # KES per bag of fertilizer
 
-# Array of randomized contextual tips for high-level agriculture value
+# Simple, helpful market tips
 MARKET_TIPS = {
     "en": [
-        "💡 *Smart Market Tip 1:* Keep leafy vegetables on moist, shaded mats prior to cooling to prevent rapid structural water loss and wilting.",
-        "💡 *Smart Market Tip 2:* Never stack high-ethylene producers like ripe avocados directly next to fresh green tomatoes; it forces rapid pre-mature ripening.",
-        "💡 *Smart Market Tip 3:* Clean storage crates with clean chlorinated water weekly to wipe out soft-rot fungal spores before they attach to delicate tomato skins.",
-        "💡 *Smart Market Tip 4:* Gently layer soft fruits in shallow crates rather than deep boxes. High structural transit weight causes hidden compression bruising."
+        "💡 *Tip 1:* Keep your green vegetables on a wet mat in the shade before bringing them to us. This stops them from drying out and losing weight!",
+        "💡 *Tip 2:* Do not store ripe avocados near raw green tomatoes. The avocados make the tomatoes rot and spoil very fast.",
+        "💡 *Tip 3:* Wash your plastic storage crates with clean water and a little bleach every week. This kills the germs that make tomatoes rot.",
+        "💡 *Tip 4:* Arrange soft fruits gently and do not pack too many in one deep box. The heavy weight at the top crushes the fruits at the bottom."
     ],
     "sw": [
-        "💡 *Vidokezo vya Soko 1:* Weka mboga za majani kwenye mikeka yenye unyevu chini ya kivuli kabla ya kuhifadhi ili kuzuia zisinyeuke haraka.",
-        "💡 *Vidokezo vya Soko 2:* Usiweke parachichi zilizoiva karibu na nyanya mbichi; gesi ya parachichi itafanya nyanya ziharibike na kuoza kwa haraka.",
-        "💡 *Vidokezo vya Soko 3:* Safisha makreti yako kwa maji safi ya klorini kila wiki ili kuua viini vya kuvu vinavyosababisha nyanya kuoza.",
-        "💡 *Vidokezo vya Soko 4:* Panga matunda laini kwa upole kwenye makreti yasiyo ya kina kirefu badala ya masanduku makubwa ili kuzuia yasipondane."
+        "💡 *Dokezo 1:* Weka mboga za majani kwenye mkeka uliolowa maji chini ya kivuli kabla ya kuzileta kwetu ili zisikauke na kupoteza uzito.",
+        "💡 *Dokezo 2:* Usiweke parachichi zilizoiva karibu na nyanya mbichi. Parachichi zitafanya nyanya ziharibike na kuoza haraka sana.",
+        "💡 *Dokezo 3:* Safisha makreti yako kwa maji safi na jiki kila wiki. Hii inaua viini vinavyofanya nyanya kuoza.",
+        "💡 *Dokezo 4:* Panga matunda laini kwa upole na usiweke mengi kwenye sanduku kubwa ili yasiidhinike na kuponda yale ya chini."
     ]
 }
 
-def generate_secure_tag():
-    """Generates a secure unique code for physical warehouse authorization tracking"""
-    return "SSAI-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
 @app.route("/main", methods=["POST"])
 def whatsapp_reply():
-    # FIXED: Declared at the very top before any logical checks or operations occur
     global AVAILABLE_STORAGE_SLOTS 
     
     incoming_msg = request.values.get("Body", "").strip()
@@ -48,9 +39,8 @@ def whatsapp_reply():
     resp = MessagingResponse()
     msg = resp.message()
 
-    # --- PERSISTENT USER RECOGNITION LOOP ---
+    # --- REMEMBER OLD USERS ---
     if sender in persistent_users and sender not in user_sessions:
-        # User is already fully registered in our database, greet them warmly instantly
         profile = persistent_users[sender]
         user_sessions[sender] = {
             "step": "main_menu",
@@ -64,14 +54,14 @@ def whatsapp_reply():
         lang = profile["lang"]
         
         welcome_back = (
-            f"🌟 *Welcome Back, {name}!* \n\nSoko Safi AI recognizes your profile. How can we serve your marketplace enterprise today?\n\n_Type *'Menu'* to display your system operation options._"
+            f"🌟 *Welcome back, {name}!* \n\nSoko Safi AI remembers you. How can we help your business today?\n\n_Type *'Menu'* to see what you can do._"
             if lang == "en" else
-            f"🌟 *Karibu Tena, {name}!* \n\nSoko Safi AI inatambua nambari yako. Je, tukusaidie vipi leo katika biashara yako?\n\n_Andika *'Menu'* ili kuona orodha ya huduma._"
+            f"🌟 *Karibu tena, {name}!* \n\nSoko Safi AI inakutambua. Tutaihudumia biashara yako vipi leo?\n\n_Andika *'Menu'* ili kuona huduma zetu._"
         )
         msg.body(welcome_back)
         return str(resp)
 
-    # --- NEW CONVERSATION INITIALIZATION ---
+    # --- START NEW CONVERSATION ---
     if sender not in user_sessions:
         user_sessions[sender] = {"step": "lang", "wallet_credits": 0.0}
         msg.body("🌟 Karibu Soko Safi AI! \n\nPlease choose your language / Tafadhali chagua lugha:\n\n1. English\n2. Kiswahili")
@@ -82,7 +72,7 @@ def whatsapp_reply():
     lang = session.get("lang", "en")
     name = session.get("name", "Trader")
 
-    # --- 1. NEW REGISTRATION ONBOARDING PIPELINE ---
+    # --- 1. REGISTRATION SIGN-UP ---
     if step == "lang":
         session["lang"] = "en" if "1" in incoming_msg else "sw"
         session["step"] = "name"
@@ -92,14 +82,14 @@ def whatsapp_reply():
     elif step == "name":
         session["name"] = incoming_msg
         session["step"] = "gender"
-        msg.body("Are you Male or Female?\n1. Female\n2. Male" if session["lang"] == "en" else "Wewe ni Mwanamke au Mwanamume?\n1. Mwanamke\n2. Mwanamume")
+        msg.body("Are you:\n1. Female\n2. Male" if session["lang"] == "en" else "Wewe ni:\n1. Mwanamke\n2. Mwanamume")
         return str(resp)
 
     elif step == "gender":
         session["gender"] = "Female" if "1" in incoming_msg else "Male"
         session["step"] = "main_menu"
         
-        # Save to persistent storage dictionary immediately to bypass next time
+        # Save user to memory database
         persistent_users[sender] = {
             "name": session["name"],
             "gender": session["gender"],
@@ -108,87 +98,86 @@ def whatsapp_reply():
         }
         
         reg_text = (
-            f"🎉 Welcome {session['name']}! You are now successfully registered with Soko Safi AI.\n\n"
-            f"We track demographic impact to support small-scale entrepreneurs. Send 'Menu' anytime to access your control panel."
+            f"🎉 Welcome {session['name']}! You are now registered with Soko Safi AI.\n\n"
+            f"Type *'Menu'* anytime to look at our services and use your account."
             if session["lang"] == "en" else
-            f"🎉 Karibu {session['name']}! Umesajiliwa kikamilifu na Soko Safi AI.\n\n"
-            f"Tunasajili jinsia ili kusaidia wafanyabiashara wadogo. Tuma 'Menu' wakati wowote kupata huduma."
+            f"🎉 Karibu {session['name']}! Umesajiliwa na Soko Safi AI.\n\n"
+            f"Andika *'Menu'* wakati wowote ili kuona huduma zetu na kutumia akaunti yako."
         )
         msg.body(reg_text)
         return str(resp)
 
-    # --- 2. MENU INTERACTIVE FRAMEWORK ---
-    menu_en = f"📋 *Soko Safi Main Menu* (Hi {name})\n\n1. ❄️ Book Cold Storage\n2. ♻️ Waste-to-Credit System\n3. 🌱 Buy Bio-Slurry Fertilizer\n4. 💡 Smart Market Tips\n\nReply with a number (1-4) or type 'Menu' to reset here."
-    menu_sw = f"📋 *Orodha Kuu ya Soko Safi* (Habari {name})\n\n1. ❄️ Weka Akiba ya Baridi\n2. ♻️ Mfumo wa Taka kuwa Mikopo\n3. 🌱 Nunua Mbolea ya Bio-Slurry\n4. 💡 Vidokezo vya Soko\n\nJibu kwa nambari (1-4) au uandike 'Menu' kurudi hapa."
+    # --- 2. MAIN MENU ---
+    menu_en = f"📋 *Soko Safi Main Menu* (Hi {name})\n\n1. ❄️ Book Cold Storage\n2. ♻️ Waste-to-Credit\n3. 🌱 Buy Fertilizer\n4. 💡 Useful Market Tips\n\nReply with a number (1-4) or type 'Menu' to restart."
+    menu_sw = f"📋 *Orodha Kuu ya Soko Safi* (Habari {name})\n\n1. ❄️ Weka Akiba ya Baridi\n2. ♻️ Taka Kuwa Mikopo\n3. 🌱 Nunua Mbolea\n4. 💡 Vidokezo vya Soko\n\nJibu na namba (1-4) au uandike 'Menu' ili kuanza tena."
 
-    # Global explicit reset interception trigger
+    # Reset trigger word
     if incoming_msg.lower() in ["menu", "habari", "hi", "m"]:
         session["step"] = "main_menu"
         msg.body(menu_en if lang == "en" else menu_sw)
         return str(resp)
 
-    # --- 3. SUB-MENU CORE CONTROLLERS ---
+    # --- 3. SUB-MENU CHOICES ---
     if step == "main_menu":
-        # OPTION 1: COLD STORAGE MAIN INTERACTION
+        # 1. COLD STORAGE
         if "1" in incoming_msg:
             session["step"] = "storage_slots"
             storage_text = (
-                f"❄️ *Soko Safi Cold Hub Capacity*\n\n"
-                f"• Current Available Space: *{AVAILABLE_STORAGE_SLOTS} Crates*\n"
-                f"• Fee: KES {PRICE_PER_CRATE} per crate/day\n\n"
-                f"Please type the number of crates you want to book right now:"
+                f"❄️ *Cold Storage space*\n\n"
+                f"• Space left today: *{AVAILABLE_STORAGE_SLOTS} Crates*\n"
+                f"• Price: KES {PRICE_PER_CRATE} for each crate per day\n\n"
+                f"How many crates do you want to book? Enter numbers only:"
                 if lang == "en" else
-                f"❄️ *Uwezo wa Kituo cha Hifadhi ya Baridi*\n\n"
-                f"• Nafasi Iliyobaki: *Makreti {AVAILABLE_STORAGE_SLOTS}*\n"
+                f"❄️ *Nafasi ya Hifadhi ya Baridi*\n\n"
+                f"• Makreti yaliyobaki: *Makreti {AVAILABLE_STORAGE_SLOTS}*\n"
                 f"• Gharama: KES {PRICE_PER_CRATE} kwa kila kreti/siku\n\n"
-                f"Tafadhali andika idadi ya makreti unayotaka kuhifadhi sasa hivi:"
+                f"Unataka kuweka akiba ya makreti mangapi? Andika namba pekee:"
             )
             msg.body(storage_text)
 
-        # OPTION 2: WASTE TO CREDIT MULTI-BUTTON SUB ROUTING
+        # 2. WASTE-TO-CREDIT 
         elif "2" in incoming_msg:
             session["step"] = "waste_menu"
             waste_menu_text = (
-                f"♻️ *Waste-to-Credit Ledger Portal*\n\n"
-                f"1. 📈 Check Current Credit Balance\n"
-                f"2. 🧮 Calculate New Earned Credits"
+                f"♻️ *Waste-to-Credit Menu*\n\n"
+                f"1. 📈 Check my credit balance\n"
+                f"2. 🧮 Count new waste credits"
                 if lang == "en" else
-                f"♻️ *Mfumo wa Taka na Mikopo*\n\n"
-                f"1. 📈 Angalia Salio la Mikopo Yako\n"
-                f"2. 🧮 Piga Hesabu ya Mikopo Mipya"
+                f"♻️ *Orodha ya Taka na Mikopo*\n\n"
+                f"1. 📈 Angalia salio langu la mikopo\n"
+                f"2. 🧮 Piga hesabu ya mikopo mipya ya taka"
             )
             msg.body(waste_menu_text)
 
-        # OPTION 3: BIO-FERTILIZER PACKAGES
+        # 3. BUY FERTILIZER
         elif "3" in incoming_msg:
             session["step"] = "fertilizer_quantity"
             fert_text = (
-                f"🌱 *Bio-Slurry Organic Fertilizer Product Portal*\n\n"
-                f"• Price: KES {PRICE_PER_FERTILIZER} per customized container bag.\n\n"
-                f"How many bags do you want to purchase today? (Please enter numbers only):"
+                f"🌱 *Bio-Slurry Fertilizer*\n\n"
+                f"• Price: KES {PRICE_PER_FERTILIZER} for each bag.\n\n"
+                f"How many bags do you want to buy today? Enter numbers only:"
                 if lang == "en" else
-                f"🌱 *Mbolea ya Kikaboni ya Bio-Slurry*\n\n"
+                f"🌱 *Mbolea ya Bio-Slurry*\n\n"
                 f"• Bei: KES {PRICE_PER_FERTILIZER} kwa kila mfuko.\n\n"
-                f"Je, unahitaji mifuko mingapi leo? (Tafadhali weka nambari pekee):"
+                f"Je, unahitaji mifuko mingapi leo? Weka namba pekee:"
             )
             msg.body(fert_text)
 
-        # OPTION 4: CONTEXTUAL ROTATING MARKET ADVISORY PUSH
+        # 4. TIPS
         elif "4" in incoming_msg:
             random_tip = random.choice(MARKET_TIPS[lang])
             follow_up = (
-                f"{random_tip}\n\n_Need another insight? Type *4* to pull up an alternate advisory tip, or type *'Menu'* to return to main operations._"
+                f"{random_tip}\n\n_Want another tip? Reply with *4*, or type *'Menu'* to go back._"
                 if lang == "en" else
-                f"{random_tip}\n\n_Je, unahitaji dokezo lingine? Tuma nambari *4* au uandike *'Menu'* kurudi kwenye orodha kuu._"
+                f"{random_tip}\n\n_Unahitaji dokezo lingine? Tuma namba *4* au uandike *'Menu'* kurudi._"
             )
             msg.body(follow_up)
-            # Maintain step state at main_menu so they can keep pulling tips by pressing '4'
             
         else:
             msg.body(menu_en if lang == "en" else menu_sw)
         return str(resp)
 
-    # --- 4. COLD STORAGE PROCESSING LOGIC ---
+    # --- 4. COLD STORAGE COUNT LOGIC ---
     if step == "storage_slots":
         try:
             requested_crates = int(''.join(filter(str.isdigit, incoming_msg)))
@@ -202,24 +191,22 @@ def whatsapp_reply():
             session["step"] = "billing_gateway"
             
             billing_prompt = (
-                f"💳 *Booking Calculation Invoice*\n\n"
-                f"• Crates Specified: {requested_crates}\n"
-                f"• Cost Parameters: {requested_crates} x KES {PRICE_PER_CRATE}\n"
-                f"• Total Amount Due: *KES {total_cost}*\n\n"
-                f"To initiate payment securely via Mpesa or Bank Paybill, please type the exact amount (*{total_cost}*) to trigger transaction configuration details:"
+                f"💳 *Your Total Bill*\n\n"
+                f"• Crates chosen: {requested_crates}\n"
+                f"• Total money to pay: *KES {total_cost}*\n\n"
+                f"Please write the number *{total_cost}* to open the bank payment steps:"
                 if lang == "en" else
-                f"💳 *Invoisi ya Malipo ya Hifadhi*\n\n"
-                f"• Makreti Yaliyochaguliwa: {requested_crates}\n"
-                f"• Maelezo ya Gharama: {requested_crates} x KES {PRICE_PER_CRATE}\n"
-                f"• Jumla Kuu ya Malipo: *KES {total_cost}*\n\n"
-                f"Ili kulipia kupitia Mpesa au Paybill ya Benki, tafadhali andika kiasi halisi cha fedha (*{total_cost}*) ili kuona maelezo ya malipo:"
+                f"💳 *Bili Yako Maalum*\n\n"
+                f"• Makreti uliyochagua: {requested_crates}\n"
+                f"• Jumla ya pesa za kulipa: *KES {total_cost}*\n\n"
+                f"Tafadhali andika namba *{total_cost}* ili uone jinsi ya kutuma pesa:"
             )
             msg.body(billing_prompt)
         except ValueError:
-            msg.body(f"Invalid volume value. Please request a quantity number between 1 and remaining space ({AVAILABLE_STORAGE_SLOTS}):" if lang == "en" else f"Idadi batili. Tafadhali weka nambari kati ya 1 na nafasi iliyobaki ({AVAILABLE_STORAGE_SLOTS}):")
+            msg.body(f"Wrong number. Please type a number between 1 and space left ({AVAILABLE_STORAGE_SLOTS}):" if lang == "en" else f"Namba mbaya. Weka namba kati ya 1 na nafasi iliyobaki ({AVAILABLE_STORAGE_SLOTS}):")
         return str(resp)
 
-    # --- 5. FERTILIZER LOGIC BRANCH ---
+    # --- 5. FERTILIZER BATCH COUNT ---
     if step == "fertilizer_quantity":
         try:
             requested_bags = int(''.join(filter(str.isdigit, incoming_msg)))
@@ -229,144 +216,135 @@ def whatsapp_reply():
             session["ordered_bags"] = requested_bags
             total_cost = requested_bags * PRICE_PER_FERTILIZER
             session["pending_payment"] = total_cost
-            session["payment_type"] = "Bio-Slurry Fertilizer Order"
+            session["payment_type"] = "Bio-Slurry Fertilizer"
             session["step"] = "billing_gateway"
             
             billing_prompt = (
-                f"💳 *Product Invoice Generation*\n\n"
-                f"• Fertilizer Requested: {requested_bags} Bags\n"
-                f"• Financial Multiplier: {requested_bags} x KES {PRICE_PER_FERTILIZER}\n"
-                f"• Net Amount Due: *KES {total_cost}*\n\n"
-                f"To complete your purchase transaction via Mpesa or Bank Paybill, please re-type the exact total figure (*{total_cost}*) to receive payment routes:"
+                f"💳 *Your Total Bill*\n\n"
+                f"• Bags chosen: {requested_bags}\n"
+                f"• Total money to pay: *KES {total_cost}*\n\n"
+                f"Please write the number *{total_cost}* to open the bank payment steps:"
                 if lang == "en" else
-                f"💳 *Invoisi ya Mbolea Mipya*\n\n"
-                f"• Mifuko Inayohitajika: {requested_bags}\n"
-                f"• Thamani ya Fedha: {requested_bags} x KES {PRICE_PER_FERTILIZER}\n"
-                f"• Jumla ya Malipo: *KES {total_cost}*\n\n"
-                f"Ili kukamilisha malipo kupitia Mpesa au Paybill ya Benki, tafadhali andika kiasi cha fedha (*{total_cost}*) ili kuona maelezo ya akaunti:"
+                f"💳 *Bili Yako Maalum*\n\n"
+                f"• Mifuko uliyochagua: {requested_bags}\n"
+                f"• Jumla ya pesa za kulipa: *KES {total_cost}*\n\n"
+                f"Tafadhali andika namba *{total_cost}* ili uone jinsi ya kutuma pesa:"
             )
             msg.body(billing_prompt)
         except ValueError:
-            msg.body("Please type a valid structured whole quantity value number:" if lang == "en" else "Tafadhali weka idadi ya mifuko kwa kutumia nambari pekee:")
+            msg.body("Please type a valid number of bags:" if lang == "en" else "Tafadhali weka idadi ya mifuko kwa kutumia namba pekee:")
         return str(resp)
 
-    # --- 6. BILLING DEPLOYMENT SYSTEM ---
+    # --- 6. EQUITY BANK & M-PESA GATEWAY ---
     if step == "billing_gateway":
         expected_payment = session.get("pending_payment", 0)
         
-        # Capture verification mechanism
         payment_gateway_text = (
-            f"📥 *Soko Safi Secure Escrow Node Gateway*\n\n"
-            f"Please input and complete your payment using the official parameters below:\n\n"
-            f"• *Lipa na M-PESA Paybill Option*\n"
-            f"  - Business Number: *400200*\n"
-            f"  - Account Number: *0719227699* (Soko Safi AI Node)\n"
-            f"  - Exact Amount: KES {expected_payment}\n\n"
-            f"• *Alternative Co-operative Bank Route*\n"
-            f"  - Paybill Number: *400200*\n"
-            f"  - Direct Ledger Account: *011000000000*\n\n"
-            f"Once you complete the terminal prompt, type *'CONFIRM'* to verify entry logistics."
+            f"📥 *How to pay KES {expected_payment}:*\n\n"
+            f"Choose ONE way to pay below:\n\n"
+            f"👉 *OPTION 1: M-Pesa Till Number (Buy Goods)*\n"
+            f"• Till Number: *3378560*\n\n"
+            f"👉 *OPTION 2: Equity Bank Paybill*\n"
+            f"• Business Number: *247247*\n"
+            f"• Account Number: *0290179939286*\n\n"
+            f"Once you send the money on your phone, *please type and send the M-Pesa/Equity Transaction Code* (e.g. RG85XX390) here to verify:"
             if lang == "en" else
-            f"📥 *Njia Salama ya Malipo - Soko Safi AI*\n\n"
-            f"Tafadhali kamilisha malipo kwa kutumia maelezo yafuatayo:\n\n"
-            f"• *Njia ya Lipa na M-PESA Paybill*\n"
-            f"  - Nambari ya Biashara (Bus. No): *400200*\n"
-            f"  - Nambari ya Akaunti (Acc. No): *0719227699*\n"
-            f"  - Kiasi Halisi: KES {expected_payment}\n\n"
-            f"• *Njia ya Benki ya Co-operative*\n"
-            f"  - Nambari ya Paybill: *400200*\n"
-            f"  - Nambari ya Akaunti ya Benki: *011000000000*\n\n"
-            f"Baada ya kukamilisha muamala kwenye simu yako, andika *'CONFIRM'* ili kuthibitisha."
+            f"📥 *Jinsi ya kulipa KES {expected_payment}:*\n\n"
+            f"Chagua njia MOJA ya kulipa hapa chini:\n\n"
+            f"👉 *NJIA YA 1: M-Pesa Till Number (Buy Goods)*\n"
+            f"• Namba ya Till: *3378560*\n\n"
+            f"👉 *NJIA YA 2: Equity Bank Paybill*\n"
+            f"• Namba ya Biashara (Paybill): *247247*\n"
+            f"• Namba ya Akaunti: *0290179939286*\n\n"
+            f"Baada ya kutuma pesa kwenye simu yako, *tafadhali andika na utume ule msimbo wa muamala/Transaction Code* (kero: RG85XX390) hapa hapa:"
         )
         session["step"] = "payment_receipting"
         msg.body(payment_gateway_text)
         return str(resp)
 
     if step == "payment_receipting":
-        if "confirm" in incoming_msg.lower():
-            secure_tag = generate_secure_tag()
-            payment_type = session.get("payment_type", "Soko Safi Order")
+        tx_code = incoming_msg.strip().upper()
+        payment_type = session.get("payment_type", "Order")
+        
+        if len(tx_code) < 4:
+            msg.body("Please enter a valid payment transaction reference code:" if lang == "en" else "Tafadhali weka msimbo halali wa muamala ulioongezwa kwenye simu yako:")
+            return str(resp)
             
-            if "Storage" in payment_type:
-                crates = session.get("booked_crates", 0)
-                # FIXED: The global variable is updated cleanly here without duplicate declaration
-                AVAILABLE_STORAGE_SLOTS = max(0, AVAILABLE_STORAGE_SLOTS - crates)
-                
-                receipt_text = (
-                    f"✅ *Payment Verified & Escrow Logged!*\n\n"
-                    f"• Service: {payment_type}\n"
-                    f"• Secured Allocation: *{crates} Hub Crates Reserved*\n"
-                    f"• Security Auth Tag: `{secure_tag}`\n\n"
-                    f"Present this secure authorization tag text to the on-site operator at Ahero/Kibuye cold hub storage room during intake drop-off.\n\n"
-                    f"🤝 Thank you for choosing Soko Safi AI! Welcome again to clean marketplace operations."
-                    if lang == "en" else
-                    f"✅ *Malipo Yamethibitishwa na Kusajiliwa!*\n\n"
-                    f"• Huduma: {payment_type}\n"
-                    f"• Nafasi Yako: *Makreti {crates} Yamehifadhiwa*\n"
-                    f"• Nambari ya Siri (Tag): `{secure_tag}`\n\n"
-                    f"Onyesha nambari hii ya siri kwa msimamizi wetu katika kituo cha hifadhi cha Ahero/Kibuye wakati vya kuleta mazao yako.\n\n"
-                    f"🤝 Asante sana kwa kuchagua Soko Safi AI! Karibu tena kufanya biashara safi sokoni."
-                )
-            else:
-                bags = session.get("ordered_bags", 0)
-                receipt_text = (
-                    f"✅ *Payment Verified & Escrow Logged!*\n\n"
-                    f"• Product Purchased: {payment_type}\n"
-                    f"• Volume Secured: *{bags} Organic Fertilizer Bag(s)*\n"
-                    f"• Collection Reference Tag: `{secure_tag}`\n\n"
-                    f"Present this tag to your marketplace agricultural distribution node to pick up your packaged product boxes.\n\n"
-                    f"🤝 Thank you for choosing Soko Safi AI! Welcome again to clean marketplace operations."
-                    if lang == "en" else
-                    f"✅ *Malipo Yamethibitishwa Kikamilifu!*\n\n"
-                    f"• Bidhaa: {payment_type}\n"
-                    f"• Mifuko Uliyochukua: *Mifuko {bags} ya Mbolea*\n"
-                    f"• Nambari ya Msimbo (Tag): `{secure_tag}`\n\n"
-                    f"Onyesha msimbo huu kwenye kituo chetu sokoni ili kuchukua mbolea yako ya Bio-Slurry.\n\n"
-                    f"🤝 Asante sana kwa kuchagua Soko Safi AI! Karibu tena kufanya biashara safi sokoni."
-                )
-                
-            msg.body(receipt_text)
-            session["step"] = "main_menu"  # Loop safely back to core menu loop
+        if "Storage" in payment_type:
+            crates = session.get("booked_crates", 0)
+            AVAILABLE_STORAGE_SLOTS = max(0, AVAILABLE_STORAGE_SLOTS - crates)
+            
+            receipt_text = (
+                f"✅ *Payment Done & Confirmed!*\n\n"
+                f"• Service: {payment_type}\n"
+                f"• Confirmed Code: {tx_code}\n"
+                f"• Space Booked: *{crates} Crates Saved*\n\n"
+                f"Please show this message and your code *{tx_code}* to our worker at the cold room hub when dropping your produce.\n\n"
+                f"🤝 Thank you for choosing Soko Safi AI! Welcome again."
+                if lang == "en" else
+                f"✅ *Malipo Yamethibitishwa!*\n\n"
+                f"• Huduma: {payment_type}\n"
+                f"• Msimbo wa Muamala: {tx_code}\n"
+                f"• Nafasi Yako: *Makreti {crates} Yamehifadhiwa*\n\n"
+                f"Onyesha ujumbe huu na msimbo wako *{tx_code}* kwa mfanyakazi wetu wa hifadhi ya baridi ukileta mazao yako.\n\n"
+                f"🤝 Asante kwa kuchagua Soko Safi AI! Karibu tena."
+            )
         else:
-            msg.body("Please complete transaction execution or type 'CONFIRM' to release authorization code tags:" if lang == "en" else "Tafadhali kamilisha malipo kisha uandike neno 'CONFIRM' ili kupata risiti yako:")
+            bags = session.get("ordered_bags", 0)
+            receipt_text = (
+                f"✅ *Payment Done & Confirmed!*\n\n"
+                f"• Product: {payment_type}\n"
+                f"• Confirmed Code: {tx_code}\n"
+                f"• Amount Saved: *{bags} Fertilizer Bag(s)*\n\n"
+                f"Show this code *{tx_code}* at our marketplace point to collect your bags.\n\n"
+                f"🤝 Thank you for choosing Soko Safi AI! Welcome again."
+                if lang == "en" else
+                f"✅ *Malipo Yamethibitishwa!*\n\n"
+                f"• Bidhaa: {payment_type}\n"
+                f"• Msimbo wa Muamala: {tx_code}\n"
+                f"• Kiasi: *Mifuko {bags} ya Mbolea*\n\n"
+                f"Onyesha msimbo huu *{tx_code}* kwenye kituo chetu sokoni ili kuchukua mifuko yako.\n\n"
+                f"🤝 Asante kwa kuchagua Soko Safi AI! Karibu tena."
+            )
+            
+        msg.body(receipt_text)
+        session["step"] = "main_menu" 
         return str(resp)
 
-    # --- 7. DETAILED SUB-MENU ACCOUNTING ENGINE (WASTE SYSTEM) ---
+    # --- 7. WASTE WALLET LOGIC ---
     if step == "waste_menu":
         current_wallet_balance = session.get("wallet_credits", 0.0)
         
-        # Option A: View current wallet status
         if "1" in incoming_msg:
             session["step"] = "main_menu"
             balance_text = (
-                f"📈 *Soko Safi Digital Wallet Ledger*\n\n"
-                f"• Registered Holder: {name}\n"
-                f"• Available Safe Storage Balance: *{current_wallet_balance} Crate Days*\n\n"
-                f"Earn more anytime by dropping raw sorting waste scraps at our hub processors! Type 'Menu' to go back."
+                f"📈 *Your Soko Safi Balance*\n\n"
+                f"• Account Owner: {name}\n"
+                f"• Free Crate Storage Balance: *{current_wallet_balance} Days*\n\n"
+                f"Bring more market waste sorting scraps to earn free days! Type 'Menu' to go back."
                 if lang == "en" else
-                f"📈 *Salio la Akaunti ya Soko Safi*\n\n"
-                f"• Mwenye Akaunti: {name}\n"
-                f"• Salio la Kreti za Akiba: *Siku {current_wallet_balance} ya Kreti Bure*\n\n"
-                f"Sanya taka zaidi sokoni ili kuongeza salio lako wakati wowote! Andika 'Menu' kurudi."
+                f"📈 *Salio Lako la Soko Safi*\n\n"
+                f"• Mmiliki wa Akaunti: {name}\n"
+                f"• Salio la Kreti za Bure: *Siku {current_wallet_balance}*\n\n"
+                f"Leta taka zaidi sokoni ili upate siku za bure! Andika 'Menu' kurudi."
             )
             msg.body(balance_text)
             
-        # Option B: Run calculation logic and compound historical balance data
         elif "2" in incoming_msg:
             session["step"] = "awaiting_waste_calc"
             msg.body(
-                f"♻️ *Waste Calculator Interface*\n\n"
-                f"Circular Rate: *30 KG Waste = 1 Full Crate Day Code*\n"
-                f"Your historical unused wallet savings: *{current_wallet_balance} Credits*\n\n"
-                f"Please input the weight of organic waste (KG) dropped off today:"
+                f"♻️ *Waste Calculator Engine*\n\n"
+                f"Rate: *30 KG Waste = 1 Free Crate Day*\n"
+                f"Your old unused credit balance: *{current_wallet_balance} Days*\n\n"
+                f"Please type the total kilograms (KG) of waste you collected today:"
                 if lang == "en" else
                 f"♻️ *Kikokotoo Kipya cha Taka*\n\n"
-                f"Kipimo: *Kilo 30 za taka = Siku 1 ya Kreti Bure*\n"
-                f"Salio lako la sasa ambalo halijatumiwa: *Mikopo {current_wallet_balance}*\n\n"
-                f"Tafadhali andika uzito wa taka (KG) ulizokusanya leo:"
+                f"Kipimo: *Kilo 30 za Taka = Siku 1 ya Kreti Bure*\n"
+                f"Salio lako la zamani ambalo hujatumia: *Siku {current_wallet_balance}*\n\n"
+                f"Tafadhali andika jumla ya kilo (KG) za taka ulizokusanya leo:"
             )
         else:
-            msg.body("Invalid input path choice. Select 1 or 2:" if lang == "en" else "Chaguo batili. Tafadhali chagua nambari 1 au 2:")
+            msg.body("Wrong choice. Type 1 or 2:" if lang == "en" else "Chaguo mbaya. Tuma 1 au 2:")
         return str(resp)
 
     if step == "awaiting_waste_calc":
@@ -374,37 +352,34 @@ def whatsapp_reply():
             waste_kg = float(''.join(c for c in incoming_msg if c.isdigit() or c=='.'))
             new_credits_earned = round(waste_kg / 30.0, 1)
             
-            # Extract and update cumulative compound values
             historical_credits = session.get("wallet_credits", 0.0)
             compounded_net_total = round(historical_credits + new_credits_earned, 1)
             
-            # Commit newly generated compound total straight into our local persistent system models
             session["wallet_credits"] = compounded_net_total
             if sender in persistent_users:
                 persistent_users[sender]["wallet_credits"] = compounded_net_total
                 
             calc_response = (
-                f"📊 *Waste Ledger Aggregation Results*\n\n"
-                f"• Fresh Bio-Waste Received: {waste_kg} KG\n"
-                f"• New Value Generated: +{new_credits_earned} Credits\n"
-                f"• Unused Rollover Savings: {historical_credits} Credits\n"
-                f"• *Total Cumulative Wallet Balance: {compounded_net_total} Crate Storage Days*\n\n"
-                f"Bring this scrap waste directly to our conversion bio-bins to confirm ledger deposit. 🤝 Thank you for choosing Soko Safi AI! Type 'Menu' to continue."
+                f"📊 *Waste Accounting Calculations*\n\n"
+                f"• Fresh Waste brought: {waste_kg} KG\n"
+                f"• New Credits earned: +{new_credits_earned} Days\n"
+                f"• Old Balance: {historical_credits} Days\n"
+                f"• *Your New Total Balance: {compounded_net_total} Free Crate Days*\n\n"
+                f"Drop this waste at our bio-bins to add it to your profile ledger. 🤝 Thank you for choosing Soko Safi AI! Type 'Menu' to go back."
                 if lang == "en" else
-                f"📊 *Matokeo ya Mahesabu ya Taka*\n\n"
-                f"• Taka Mpya Zilizopokelewa: {waste_kg} KG\n"
-                f"• Mikopo Mipya Iliyozalishwa: +{new_credits_earned}\n"
-                f"• Salio lako la Kale: {historical_credits}\n"
-                f"• *Jumla Kuu ya Mikopo Kwenye Wallet: Mikopo {compounded_net_total} (Siku za Hifadhi)*\n\n"
-                f"Leta taka hizi kwenye mapipa yetu ili kuidhinisha salio lako jipya. 🤝 Asante kwa kuchagua Soko Safi AI! Andika 'Menu' kuendelea."
+                f"📊 *Mahesabu ya Taka na Mikopo*\n\n"
+                f"• Taka ulizoleta leo: {waste_kg} KG\n"
+                f"• Mikopo mipya: +{new_credits_earned} Siku\n"
+                f"• Salio la zamani: {historical_credits} Siku\n"
+                f"• *Salio Lako Jipya Jumla: Siku {compounded_net_total} za Kreti Bure*\n\n"
+                f"Weka taka hizi kwenye pipa letu maalum ili ziongezwe kwenye akaunti yako. 🤝 Asante kwa kuchagua Soko Safi AI! Andika 'Menu' kurudi."
             )
             msg.body(calc_response)
             session["step"] = "main_menu"
         except ValueError:
-            msg.body("Please enter a valid numeric value for waste calculation (e.g. 45):" if lang == "en" else "Tafadhali weka nambari halali ya kilo pekee (kero: 45):")
+            msg.body("Please type a valid number for waste kilograms (e.g. 45):" if lang == "en" else "Tafadhali weka namba halali ya kilo pekee (kero: 45):")
         return str(resp)
 
-    # General system fallback handling safely looping inputs back home
     msg.body(menu_en if lang == "en" else menu_sw)
     return str(resp)
 
