@@ -12,7 +12,7 @@ By integrating a **biogas- and solar-powered walk-in cold storage hub** with an 
 * **🎬 Live WhatsApp MVP Bot:** [Chat with Soko Safi AI (Send: `join science-making`)](https://wa.me/14155238886?text=join%20science-making)
 * **📱 Project Demo Video:** [Watch the MVP Prototype in Action](https://youtube.com/shorts/OCYHlLMRR18?si=UzErusJPeJtaDDcA)
 * **📊 Investment Pitch Deck:** [Soko Safi AI Google Slides Deck](https://docs.google.com/presentation/d/1-OyKotujsVy2RKGbwl-7GD_97bSUaUlt5kUgopaQdhI/edit?usp=sharing)
-* **📁 Technical Architecture & Code Base:** [Read the MVP Appendix Documentation](https://drive.google.com/file/d/1ooCY-eLDMMkICLyMPtOG4PUSmujDd4ve/view?usp=sharing)
+* **📁 Field Pilot validation study and technical appendix:** [Read the MVP Appendix Documentation](https://drive.google.com/file/d/1ooCY-eLDMMkICLyMPtOG4PUSmujDd4ve/view?usp=sharing)
 
 ---
 
